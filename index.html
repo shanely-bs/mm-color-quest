@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>M&M’S Colour Quest</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 24px; }
+    .card { max-width: 520px; margin: 0 auto; border: 1px solid #e5e5e5; border-radius: 16px; padding: 18px; }
+    h1 { font-size: 22px; margin: 0 0 10px; }
+    p { margin: 8px 0; line-height: 1.35; }
+    .progress { display: flex; gap: 8px; margin: 14px 0 6px; }
+    .dot { width: 14px; height: 14px; border-radius: 999px; background: #ddd; }
+    .dot.on { background: #111; }
+    .btn { display: inline-block; margin-top: 12px; padding: 10px 12px; border-radius: 10px; border: 1px solid #111; text-decoration: none; }
+    .small { font-size: 12px; opacity: 0.7; margin-top: 14px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 id="title">M&M’S Colour Quest</h1>
+
+    <div class="progress" aria-label="Progress">
+      <div id="dot1" class="dot"></div>
+      <div id="dot2" class="dot"></div>
+      <div id="dot3" class="dot"></div>
+    </div>
+
+    <p id="message">Scan an M&M’S QR code to begin.</p>
+
+    <div id="reward" style="display:none;">
+      <h2>Reward unlocked 🎉</h2>
+      <p><strong>Show this screen at checkout</strong> to claim your reward.</p>
+      <!-- Optional: add a barcode/coupon image -->
+      <!-- <img src="reward.png" alt="Reward barcode" style="width:100%; max-width:360px;" /> -->
+      <p class="small" id="token"></p>
+    </div>
+
+    <a class="btn" href="#" id="reset" style="display:none;">Reset progress</a>
+
+    <p class="small">
+      Tip: If you scanned only one code, you won’t see the reward yet — find the other two standees.
+    </p>
+  </div>
+
+<script>
+  // Map scan numbers to fun facts (replace with your approved facts)
+  const FUN_FACTS = {
+    "1": "Fun fact #1: M&M’S are known for their colourful candy shell.",
+    "2": "Fun fact #2: Each colour has its own personality in the M&M’S world.",
+    "3": "Fun fact #3: You’ve found the final colour — nice work!"
+  };
+
+  const params = new URLSearchParams(window.location.search);
+  const scan = params.get("scan"); // "1", "2", "3"
+
+  // Read progress from this device
+  const key = "mm_color_quest_scans_v1";
+  const stored = JSON.parse(localStorage.getItem(key) || "[]");
+  const scans = new Set(stored);
+
+  // If a valid scan, store it
+  if (scan === "1" || scan === "2" || scan === "3") {
+    scans.add(scan);
+    localStorage.setItem(key, JSON.stringify([...scans]));
+  }
+
+  // Update progress dots
+  const has1 = scans.has("1"), has2 = scans.has("2"), has3 = scans.has("3");
+  document.getElementById("dot1").classList.toggle("on", has1);
+  document.getElementById("dot2").classList.toggle("on", has2);
+  document.getElementById("dot3").classList.toggle("on", has3);
+
+  const messageEl = document.getElementById("message");
+  const rewardEl = document.getElementById("reward");
+  const resetEl  = document.getElementById("reset");
+
+  // Show the right content
+  if (!scan) {
+    messageEl.textContent = "Scan the first M&M’S QR code to start your Colour Quest.";
+  } else {
+    messageEl.textContent = FUN_FACTS[scan] || "Nice scan!";
+  }
+
+  const complete = has1 && has2 && has3;
+  if (complete) {
+    rewardEl.style.display = "block";
+    messageEl.textContent = "You completed all 3 scans!";
+    resetEl.style.display = "inline-block";
+
+    // Optional: create a simple “token” that changes daily (not secure, but handy)
+    const today = new Date();
+    const token = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+    document.getElementById("token").textContent = `Validation: COMPLETED • ${token}`;
+  }
+
+  // Reset
+  resetEl.addEventListener("click", (e) => {
+    e.preventDefault();
+    localStorage.removeItem(key);
+    window.location.href = window.location.pathname; // reload without ?scan=
+  });
+</script>
+</body>
+</html>
