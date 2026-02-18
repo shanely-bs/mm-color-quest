@@ -41,8 +41,6 @@
       <p class="small" id="token"></p>
     </div>
 
-    <a class="btn" href="#" id="reset" style="display:none;">Reset progress</a>
-
     <p class="small">
       Tip: If you scanned only one code, you won’t see the reward yet — find the other two standees.
     </p>
@@ -82,9 +80,9 @@ const FACT_IMAGES = {
   document.getElementById("dot2").classList.toggle("on", has2);
   document.getElementById("dot3").classList.toggle("on", has3);
 
-  const messageEl = document.getElementById("message");
-  const rewardEl = document.getElementById("reward");
-  const resetEl  = document.getElementById("reset");
+const messageEl = document.getElementById("message");
+const rewardEl = document.getElementById("reward");
+const continueEl = document.getElementById("continue");
 
   // Show the right content
  const imageEl = document.getElementById("factImage");
@@ -100,23 +98,39 @@ if (!scan) {
 
 
   const complete = has1 && has2 && has3;
-  if (complete) {
-    rewardEl.style.display = "block";
-    messageEl.textContent = "You completed all 3 scans!";
-    resetEl.style.display = "inline-block";
+ if (complete) {
+  // If we already generated a reward for this device, reuse it
+  let rewardCode = localStorage.getItem(rewardKey);
 
-    // Optional: create a simple “token” that changes daily (not secure, but handy)
-    const today = new Date();
-    const token = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
-    document.getElementById("token").textContent = `Validation: COMPLETED • ${token}`;
+  // Generate a one-time code the first time they complete
+  if (!rewardCode) {
+    rewardCode = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + "-" + Math.random().toString(16).slice(2));
+    localStorage.setItem(rewardKey, rewardCode);
   }
 
-  // Reset
-  resetEl.addEventListener("click", (e) => {
-    e.preventDefault();
-    localStorage.removeItem(key);
-    window.location.href = window.location.pathname; // reload without ?scan=
-  });
+  // On scan 3: show fun fact first, then reveal reward on tap
+  if (scan === "3") {
+    rewardEl.style.display = "none";
+    continueEl.style.display = "inline-block";
+
+    continueEl.addEventListener("click", (e) => {
+      e.preventDefault();
+      continueEl.style.display = "none";
+      rewardEl.style.display = "block";
+      messageEl.textContent = "Completed! You scanned all 3 QR codes.";
+      document.getElementById("token").textContent = `Reward code: ${rewardCode}`;
+    }, { once: true });
+
+  } else {
+    // If they open the page later, show reward immediately
+    continueEl.style.display = "none";
+    rewardEl.style.display = "block";
+    messageEl.textContent = "Completed! You scanned all 3 QR codes.";
+    document.getElementById("token").textContent = `Reward code: ${rewardCode}`;
+  }
+}
+
+
 </script>
 </body>
 </html>
