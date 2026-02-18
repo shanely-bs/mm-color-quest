@@ -25,8 +25,13 @@
       <div id="dot2" class="dot"></div>
       <div id="dot3" class="dot"></div>
     </div>
+    
+<img id="factImage" src="" alt="" 
+     style="width:100%; max-width:520px; border-radius:12px; margin:12px 0; display:none;" />
 
     <p id="message">Scan an M&M’S QR code to begin.</p>
+
+    <a class="btn" href="#" id="continue" style="display:none;">Unlock reward</a>
 
     <div id="reward" style="display:none;">
       <h2>Reward unlocked 🎉</h2>
@@ -50,6 +55,12 @@
     "2": "Fun fact #2: Each colour has its own personality in the M&M’S world.",
     "3": "Fun fact #3: You’ve found the final colour — nice work!"
   };
+  
+const FACT_IMAGES = {
+  "1": "fact1.jpg",
+  "2": "fact2.png",
+  "3": "fact3.png"
+};
 
   const params = new URLSearchParams(window.location.search);
   const scan = params.get("scan"); // "1", "2", "3"
@@ -76,11 +87,17 @@
   const resetEl  = document.getElementById("reset");
 
   // Show the right content
-  if (!scan) {
-    messageEl.textContent = "Scan the first M&M’S QR code to start your Colour Quest.";
-  } else {
-    messageEl.textContent = FUN_FACTS[scan] || "Nice scan!";
-  }
+ const imageEl = document.getElementById("factImage");
+
+if (!scan) {
+  messageEl.textContent = "Scan the first M&M’S QR code to start your Colour Quest.";
+  imageEl.style.display = "none";
+} else {
+  messageEl.textContent = FUN_FACTS[scan] || "Nice scan!";
+  imageEl.src = FACT_IMAGES[scan];
+  imageEl.style.display = "block";
+}
+
 
   const complete = has1 && has2 && has3;
   if (complete) {
