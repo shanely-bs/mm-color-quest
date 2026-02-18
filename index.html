@@ -47,90 +47,103 @@
   </div>
 
 <script>
-  // Map scan numbers to fun facts (replace with your approved facts)
+  // --- content ---
   const FUN_FACTS = {
-    "1": "Fun fact #1: M&M’S are known for their colourful candy shell.",
-    "2": "Fun fact #2: Each colour has its own personality in the M&M’S world.",
-    "3": "Fun fact #3: You’ve found the final colour — nice work!"
+    "1": "Fun fact #1: Replace this with your approved copy.",
+    "2": "Fun fact #2: Replace this with your approved copy.",
+    "3": "Fun fact #3: Replace this with your approved copy."
   };
-  
-const FACT_IMAGES = {
-  "1": "fact1.jpg",
-  "2": "fact2.png",
-  "3": "fact3.png"
-};
 
+  const FACT_IMAGES = {
+    "1": "fact1.jpg",
+    "2": "fact2.jpg",
+    "3": "fact3.jpg"
+  };
+
+  // --- keys ---
+  const progressKey = "mm_color_quest_scans_v1";
+  const rewardKey   = "mm_color_quest_reward_code_v1";
+
+  // --- read scan param ---
   const params = new URLSearchParams(window.location.search);
-  const scan = params.get("scan"); // "1", "2", "3"
+  const scan = params.get("scan"); // "1" | "2" | "3"
 
-  // Read progress from this device
-  const key = "mm_color_quest_scans_v1";
-  const stored = JSON.parse(localStorage.getItem(key) || "[]");
-  const scans = new Set(stored);
+  // --- elements ---
+  const messageEl  = document.getElementById("message");
+  const rewardEl   = document.getElementById("reward");
+  const continueEl = document.getElementById("continue");
+  const imageEl    = document.getElementById("factImage");
+  const tokenEl    = document.getElementById("token");
 
-  // If a valid scan, store it
-  if (scan === "1" || scan === "2" || scan === "3") {
-    scans.add(scan);
-    localStorage.setItem(key, JSON.stringify([...scans]));
+  // Safety: if the continue button isn't in HTML, fail gracefully
+  if (!continueEl) {
+    console.log("Continue button not found. Check id='continue' in HTML.");
   }
 
-  // Update progress dots
+  // --- load + update progress on this device ---
+  const stored = JSON.parse(localStorage.getItem(progressKey) || "[]");
+  const scans = new Set(stored);
+
+  if (scan === "1" || scan === "2" || scan === "3") {
+    scans.add(scan);
+    localStorage.setItem(progressKey, JSON.stringify([...scans]));
+  }
+
+  // --- progress dots ---
   const has1 = scans.has("1"), has2 = scans.has("2"), has3 = scans.has("3");
   document.getElementById("dot1").classList.toggle("on", has1);
   document.getElementById("dot2").classList.toggle("on", has2);
   document.getElementById("dot3").classList.toggle("on", has3);
 
-const messageEl = document.getElementById("message");
-const rewardEl = document.getElementById("reward");
-const continueEl = document.getElementById("continue");
-
-  // Show the right content
- const imageEl = document.getElementById("factImage");
-
-if (!scan) {
-  messageEl.textContent = "Scan the first M&M’S QR code to start your Colour Quest.";
-  imageEl.style.display = "none";
-} else {
-  messageEl.textContent = FUN_FACTS[scan] || "Nice scan!";
-  imageEl.src = FACT_IMAGES[scan];
-  imageEl.style.display = "block";
-}
-
-
-  const complete = has1 && has2 && has3;
- if (complete) {
-  // If we already generated a reward for this device, reuse it
-  let rewardCode = localStorage.getItem(rewardKey);
-
-  // Generate a one-time code the first time they complete
-  if (!rewardCode) {
-    rewardCode = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + "-" + Math.random().toString(16).slice(2));
-    localStorage.setItem(rewardKey, rewardCode);
+  // --- show fact + image ---
+  if (!scan) {
+    messageEl.textContent = "Scan the first M&M’S QR code to start your Colour Quest.";
+    if (imageEl) imageEl.style.display = "none";
+  } else {
+    messageEl.textContent = FUN_FACTS[scan] || "Nice scan!";
+    if (imageEl) {
+      imageEl.src = FACT_IMAGES[scan] || "";
+      imageEl.style.display = imageEl.src ? "block" : "none";
+    }
   }
 
-  // On scan 3: show fun fact first, then reveal reward on tap
-  if (scan === "3") {
-    rewardEl.style.display = "none";
-    continueEl.style.display = "inline-block";
+  // --- completion + reward behaviour ---
+  const complete = has1 && has2 && has3;
 
-    continueEl.addEventListener("click", (e) => {
-      e.preventDefault();
-      continueEl.style.display = "none";
+  if (complete) {
+    // Generate (once) and store a unique reward code on this device
+    let rewardCode = localStorage.getItem(rewardKey);
+    if (!rewardCode) {
+      rewardCode = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + "-" + Math.random().toString(16).slice(2));
+      localStorage.setItem(rewardKey, rewardCode);
+    }
+
+    // On scan 3: show fun fact first, then show reward after tapping Continue
+    if (scan === "3" && continueEl) {
+      rewardEl.style.display = "none";
+      continueEl.style.display = "inline-block";
+
+      continueEl.addEventListener("click", (e) => {
+        e.preventDefault();
+        continueEl.style.display = "none";
+        rewardEl.style.display = "block";
+        messageEl.textContent = "Completed! You scanned all 3 QR codes.";
+        if (tokenEl) tokenEl.textContent = `Reward code: ${rewardCode}`;
+      }, { once: true });
+
+    } else {
+      // If they return later, show reward immediately
+      if (continueEl) continueEl.style.display = "none";
       rewardEl.style.display = "block";
       messageEl.textContent = "Completed! You scanned all 3 QR codes.";
-      document.getElementById("token").textContent = `Reward code: ${rewardCode}`;
-    }, { once: true });
-
+      if (tokenEl) tokenEl.textContent = `Reward code: ${rewardCode}`;
+    }
   } else {
-    // If they open the page later, show reward immediately
-    continueEl.style.display = "none";
-    rewardEl.style.display = "block";
-    messageEl.textContent = "Completed! You scanned all 3 QR codes.";
-    document.getElementById("token").textContent = `Reward code: ${rewardCode}`;
+    // Not complete yet
+    if (continueEl) continueEl.style.display = "none";
+    rewardEl.style.display = "none";
   }
-}
-
-
 </script>
+
 </body>
 </html>
