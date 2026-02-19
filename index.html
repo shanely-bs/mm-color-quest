@@ -42,10 +42,8 @@
       <p class="small" id="token"></p>
     </div>
 
-    <p class="small" id="debug"></p>
-
     <p class="small">
-      Tip: Scan all three QR standees to unlock the reward.
+      Tip: Scan all THREE QR standees to unlock the reward.
     </p>
   </div>
 
@@ -80,8 +78,6 @@ Etiam sagittis massa ut tincidunt mattis. Vestibulum sed augue pharetra, convall
     const tokenEl    = document.getElementById("token");
     const debugEl    = document.getElementById("debug");
 
-    // Debug: proves JS is running + shows detected scan param
-    debugEl.textContent = "JS running ✅ | scan=" + (scan || "NONE");
 
     // Load + update progress
     const stored = JSON.parse(localStorage.getItem(progressKey) || "[]");
@@ -115,9 +111,9 @@ Etiam sagittis massa ut tincidunt mattis. Vestibulum sed augue pharetra, convall
         imageEl.style.display = "none";
       }
 
-      if (remaining === 2) helperEl.textContent = "Nice start — scan 2 more QR codes to unlock your reward.";
-      if (remaining === 1) helperEl.textContent = "Nearly there — just 1 more QR code to go.";
-      if (remaining === 0) helperEl.textContent = "All done — your reward is ready to unlock.";
+      if (remaining === 2) helperEl.textContent = "Nice start! Scan 2 more QR codes to unlock your reward.";
+      if (remaining === 1) helperEl.textContent = "Nearly there! Just 1 more QR code to go.";
+      if (remaining === 0) helperEl.textContent = "All done! Your reward is ready to unlock.";
     }
 
     // Completion + reward
