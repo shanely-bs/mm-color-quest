@@ -94,6 +94,8 @@
 
   // --- progress dots ---
   const has1 = scans.has("1"), has2 = scans.has("2"), has3 = scans.has("3");
+  const scannedCount = [has1, has2, has3].filter(Boolean).length;
+const remaining = 3 - scannedCount;
   document.getElementById("dot1").classList.toggle("on", has1);
   document.getElementById("dot2").classList.toggle("on", has2);
   document.getElementById("dot3").classList.toggle("on", has3);
@@ -110,9 +112,22 @@
     imageEl.style.display = imageEl.src ? "block" : "none";
   }
 
-  if (scan === "1") helperEl.textContent = "Great start — scan 2 more QR codes to unlock your reward.";
-  if (scan === "2") helperEl.textContent = "Nice! Just 1 more QR code to go.";
-  if (scan === "3") helperEl.textContent = "Final scan — you’re moments away from your reward.";
+if (!scan) {
+  messageEl.textContent = "Welcome to the M&M’S Colour Quest!";
+  helperEl.textContent = "Scan any QR code to begin.";
+  if (imageEl) imageEl.style.display = "none";
+} else {
+  messageEl.textContent = FUN_FACTS[scan] || "Nice scan!";
+  if (imageEl) {
+    imageEl.src = FACT_IMAGES[scan] || "";
+    imageEl.style.display = imageEl.src ? "block" : "none";
+  }
+
+  if (remaining === 2) helperEl.textContent = "Nice start — scan 2 more QR codes to unlock your reward.";
+  if (remaining === 1) helperEl.textContent = "Nearly there — just 1 more QR code to go.";
+  if (remaining === 0) helperEl.textContent = "All done — your reward is ready to unlock.";
+}
+
 }
 
   // --- completion + reward behaviour ---
