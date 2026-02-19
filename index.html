@@ -5,119 +5,147 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>M&M’S Colour Quest</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 24px; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 24px; background:#fff; }
     .card { max-width: 520px; margin: 0 auto; border: 1px solid #e5e5e5; border-radius: 16px; padding: 18px; }
     h1 { font-size: 22px; margin: 0 0 10px; }
     p { margin: 8px 0; line-height: 1.35; }
     .progress { display: flex; gap: 8px; margin: 14px 0 6px; }
     .dot { width: 14px; height: 14px; border-radius: 999px; background: #ddd; }
     .dot.on { background: #111; }
-    .btn { display: inline-block; margin-top: 12px; padding: 10px 12px; border-radius: 10px; border: 1px solid #111; text-decoration: none; }
-    .small { font-size: 12px; opacity: 0.7; margin-top: 14px; }
+    .btn { display: inline-block; margin-top: 12px; padding: 10px 12px; border-radius: 10px; border: 1px solid #111; text-decoration: none; color:#111; }
+    .small { font-size: 12px; opacity: 0.7; margin-top: 12px; }
+    #factImage { width:100%; max-width:520px; border-radius:12px; margin:12px 0; display:none; }
   </style>
 </head>
+
 <body>
   <div class="card">
-    <h1 id="title">M&M’S Colour Quest</h1>
+    <h1>M&M’S Colour Quest</h1>
 
     <div class="progress" aria-label="Progress">
       <div id="dot1" class="dot"></div>
       <div id="dot2" class="dot"></div>
       <div id="dot3" class="dot"></div>
     </div>
-    
-<img id="factImage" src="" alt="" 
-     style="width:100%; max-width:520px; border-radius:12px; margin:12px 0; display:none;" />
 
-    <p id="message">Scan an M&M’S QR code to begin.</p>
+    <img id="factImage" src="" alt="" />
+
+    <p id="message">Loading…</p>
     <p id="helper" style="margin:6px 0 0; opacity:0.75;"></p>
 
     <a class="btn" href="#" id="continue" style="display:none;">Unlock reward</a>
 
     <div id="reward" style="display:none;">
-      <h2>Reward unlocked 🎉</h2>
-      <p><strong>Show this screen at checkout</strong> to claim your reward.</p>
-      <!-- Optional: add a barcode/coupon image -->
-      <!-- <img src="reward.png" alt="Reward barcode" style="width:100%; max-width:360px;" /> -->
+      <h2>Completed 🎉</h2>
+      <p><strong>You’ve scanned all 3 QR codes.</strong></p>
+      <p>Go to checkout and show this screen to claim your reward.</p>
       <p class="small" id="token"></p>
     </div>
 
+    <p class="small" id="debug"></p>
+
     <p class="small">
-      Tip: If you scanned only one/two code(s), you won’t see the reward yet — find all three QR standees.
+      Tip: Scan all three QR standees to unlock the reward.
     </p>
   </div>
 
-<script>
-  // --- content ---
-const FUN_FACTS = {
-  "1": `Fun fact: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam sit amet condimentum felis.
-Etiam sagittis massa ut tincidunt mattis. Vestibulum sed augue pharetra, convallis metus id, hendrerit purus.
-Morbi vitae egestas tellus. Aliquam congue dapibus elit eget venenatis.`,
-  "2": `Fun fact: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam sit amet condimentum felis.
-Etiam sagittis massa ut tincidunt mattis. Vestibulum sed augue pharetra, convallis metus id, hendrerit purus.
-Morbi vitae egestas tellus. Aliquam congue dapibus elit eget venenatis.`,
-  "3": `Fun fact: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam sit amet condimentum felis.
-Etiam sagittis massa ut tincidunt mattis. Vestibulum sed augue pharetra, convallis metus id, hendrerit purus.
-Morbi vitae egestas tellus. Aliquam congue dapibus elit eget venenatis.`
-};
+  <script>
+    // --- content ---
+    const FUN_FACTS = {
+      "1": "Fun fact #1: Replace this with your approved copy.",
+      "2": "Fun fact #2: Replace this with your approved copy.",
+      "3": "Fun fact #3: Replace this with your approved copy."
+    };
 
-const FACT_IMAGES = {
-  "1": "fact1.jpg",
-  "2": "fact2.png",
-  "3": "fact3.png"
-};
+    const FACT_IMAGES = {
+      "1": "fact1.jpg",
+      "2": "fact2.png",
+      "3": "fact3.png"
+    };
 
-// --- keys ---
-const progressKey = "mm_color_quest_scans_v1";
-const rewardKey   = "mm_color_quest_reward_code_v1";
+    const progressKey = "mm_color_quest_scans_v1";
+    const rewardKey   = "mm_color_quest_reward_code_v1";
 
-// --- read scan param ---
-const params = new URLSearchParams(window.location.search);
-const scan = params.get("scan"); // "1" | "2" | "3"
+    const params = new URLSearchParams(window.location.search);
+    const scan = params.get("scan"); // "1" | "2" | "3"
 
-// --- elements ---
-const messageEl  = document.getElementById("message");
-const helperEl   = document.getElementById("helper");
-const rewardEl   = document.getElementById("reward");
-const continueEl = document.getElementById("continue");
-const imageEl    = document.getElementById("factImage");
-const tokenEl    = document.getElementById("token");
+    const messageEl  = document.getElementById("message");
+    const helperEl   = document.getElementById("helper");
+    const rewardEl   = document.getElementById("reward");
+    const continueEl = document.getElementById("continue");
+    const imageEl    = document.getElementById("factImage");
+    const tokenEl    = document.getElementById("token");
+    const debugEl    = document.getElementById("debug");
 
-// --- load + update progress on this device ---
-const stored = JSON.parse(localStorage.getItem(progressKey) || "[]");
-const scans = new Set(stored);
+    // Debug: proves JS is running + shows detected scan param
+    debugEl.textContent = "JS running ✅ | scan=" + (scan || "NONE");
 
-if (scan === "1" || scan === "2" || scan === "3") {
-  scans.add(scan);
-  localStorage.setItem(progressKey, JSON.stringify([...scans]));
-}
+    // Load + update progress
+    const stored = JSON.parse(localStorage.getItem(progressKey) || "[]");
+    const scans = new Set(stored);
 
-// --- progress dots ---
-const has1 = scans.has("1"), has2 = scans.has("2"), has3 = scans.has("3");
-document.getElementById("dot1").classList.toggle("on", has1);
-document.getElementById("dot2").classList.toggle("on", has2);
-document.getElementById("dot3").classList.toggle("on", has3);
+    if (scan === "1" || scan === "2" || scan === "3") {
+      scans.add(scan);
+      localStorage.setItem(progressKey, JSON.stringify([...scans]));
+    }
 
-// --- progress messaging (order does NOT matter) ---
-const scannedCount = [has1, has2, has3].filter(Boolean).length;
-const remaining = 3 - scannedCount;
+    const has1 = scans.has("1"), has2 = scans.has("2"), has3 = scans.has("3");
+    document.getElementById("dot1").classList.toggle("on", has1);
+    document.getElementById("dot2").classList.toggle("on", has2);
+    document.getElementById("dot3").classList.toggle("on", has3);
 
-// --- show fact + image ---
-if (!scan) {
-  messageEl.textContent = "Welcome to the M&M’S Colour Quest!";
-  if (helperEl) helperEl.textContent = "Scan any QR code to begin.";
-  if (imageEl) imageEl.style.display = "none";
-} else {
-  messageEl.textContent = FUN_FACTS[scan] || "Nice scan!";
-  if (imageEl) {
-    imageEl.src = FACT_IMAGES[scan] || "";
-    imageEl.style.display = imageEl.src ? "block" : "none";
-  }
+    const scannedCount = [has1, has2, has3].filter(Boolean).length;
+    const remaining = 3 - scannedCount;
 
-  if (helperEl) {
-    if (remaining === 2) helperEl.textContent = "Nice start — scan 2 more QR codes to unlock your reward.";
-    if (remaining === 1) helperEl.textContent = "Nearly there — just 1 more QR
-</script>
+    // Show fact + image
+    if (!scan) {
+      messageEl.textContent = "Welcome to the M&M’S Colour Quest!";
+      helperEl.textContent = "Scan any QR code to begin.";
+      imageEl.style.display = "none";
+    } else {
+      messageEl.textContent = FUN_FACTS[scan] || "Nice scan!";
+      const img = FACT_IMAGES[scan] || "";
+      if (img) {
+        imageEl.src = img;
+        imageEl.style.display = "block";
+      } else {
+        imageEl.style.display = "none";
+      }
 
+      if (remaining === 2) helperEl.textContent = "Nice start — scan 2 more QR codes to unlock your reward.";
+      if (remaining === 1) helperEl.textContent = "Nearly there — just 1 more QR code to go.";
+      if (remaining === 0) helperEl.textContent = "All done — your reward is ready to unlock.";
+    }
+
+    // Completion + reward
+    const complete = has1 && has2 && has3;
+
+    if (complete) {
+      let rewardCode = localStorage.getItem(rewardKey);
+      if (!rewardCode) {
+        rewardCode = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + "-" + Math.random().toString(16).slice(2));
+        localStorage.setItem(rewardKey, rewardCode);
+      }
+
+      // Show reward after they tap continue *on the final scan they happen to do*
+      // (order doesn't matter; it triggers when remaining === 0)
+      if (remaining === 0 && continueEl) {
+        rewardEl.style.display = "none";
+        continueEl.style.display = "inline-block";
+
+        continueEl.addEventListener("click", (e) => {
+          e.preventDefault();
+          continueEl.style.display = "none";
+          rewardEl.style.display = "block";
+          messageEl.textContent = "Completed! You scanned all 3 QR codes.";
+          tokenEl.textContent = "Reward code: " + rewardCode;
+        }, { once: true });
+      }
+    } else {
+      rewardEl.style.display = "none";
+      if (continueEl) continueEl.style.display = "none";
+      if (tokenEl) tokenEl.textContent = "";
+    }
+  </script>
 </body>
 </html>
